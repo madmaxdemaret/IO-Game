@@ -14,8 +14,8 @@ console.log("Server started.");
 
 var SOCKET_LIST = {};
 ////////////Player img width and height
-var PimgW = 96.6666666667;
-var PimgH = 94.75;
+var PimgW = 18;
+var PimgH = 20;
 var Entity = function(param){
 	////////detects if there is a collision with any player and only spawns when there is no collision
 	var self = {collision:false,}
