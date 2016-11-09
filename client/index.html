@@ -127,10 +127,10 @@
 			ctx.fillStyle = 'green';
 			ctx.fillRect(x - hpWidth/2,y - 40,hpWidth,4);
 			///////////////player width and height///
-			var width = Img.playerSprite.width/3*2;
+			var width = Img.playerSprite.width/4*2;
 			var height = Img.playerSprite.height/4*2;
 			///////////////sprite///////////////////
-			var spriteW = Img.playerSprite.width/3;
+			var spriteW = Img.playerSprite.width/4;
 			var spriteH = Img.playerSprite.height/4;
 			//gets mouse angel and makes it positive if negative
 			var mouseAngle = self.mouseAngle;
@@ -145,7 +145,7 @@
 			else if(mouseAngle >= 315 || mouseAngle < 45) //right
 				directionMod = 2;
 			///sets moveMod depending on how long moving
-			var moveMod = Math.floor(self.animCounter) % 3;
+			var moveMod = Math.floor(self.animCounter) % 4;
 			//picks the sprite from sheet based on directionMod and moveMod
 			if(self.isZombie)
 				var imgPicker = Img.playerSprite2;
