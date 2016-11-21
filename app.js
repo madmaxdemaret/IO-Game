@@ -1,5 +1,3 @@
-//var db = null;//mongojs('localhost:27017/myGame', ['account','progress']);
-
 var express = require('express');
 var app = express();
 var serv = require('http').Server(app);
@@ -11,7 +9,20 @@ app.use('/client',express.static(__dirname + '/client'));
 
 serv.listen(process.env.PORT || 2000);
 console.log("Server started.");
+//////////////////////gets collision map////////////////////////////////////////////
+var arrayHeight = 128;
+var arrayWidth = 128;
+var fs = require("fs");
+var text = fs.readFileSync(__dirname + '/client/img/collisionMap.txt', "utf-8");
 
+var collisionArray = new Array(arrayHeight);
+for(var i = 0; i < arrayHeight; i++){
+	collisionArray[i] = new Array(arrayWidth);
+	for(var j = 0; j < arrayWidth; j++){
+		collisionArray[i][j] = text.charAt(i*arrayWidth + j);
+	}
+}
+////////////////////////////////////////////////////////////////////////////////////
 var SOCKET_LIST = {};
 ////////////Player img width and height
 var PimgW = 18;
@@ -39,6 +50,7 @@ var Entity = function(param){
 		spdY:0,
 		id:"",
 		map:'forest',
+		//onWall: true;
 	}
 	if(param){
 		if(param.x)
@@ -62,7 +74,7 @@ var Entity = function(param){
 	self.getDistance = function(pt){
 		return Math.sqrt(Math.pow(self.x-pt.x,2) + Math.pow(self.y-pt.y,2));
 	}
-	///////checks collision between all players
+	///////checks for all collisions
 	self.checkForCollision = function(x,y){
 		if(!x && !y){
 			for(var i in Player.list){
@@ -86,6 +98,7 @@ var Entity = function(param){
 			}
 		}
 	}
+	
 	return self;
 }
 
@@ -104,22 +117,10 @@ var Player = function(param){
 	self.score = 0;
 	self.animCounter = 1;//1 is the starting frame for this sprite//0 and 2
 	self.isZombie = roundStarted;
+	self.name = NAMES_LIST[counter];
+	self.skins = "reg";
 	
 	self.updatePosition = function(){
-		/*
-		if(self.x < 0){
-			self.x+=10;
-			
-		}else if(self.x > 640*2-12){
-			self.x-=10;
-		}
-		if(self.y < 0){
-			self.y+=10;
-			
-		}else if(self.y > 480*2-14){
-			self.y-=10;
-		}
-		*/
 		self.x += self.spdX;
 		self.y += self.spdY;
 		
@@ -171,6 +172,11 @@ var Player = function(param){
 		
 	}
 	
+	self.updateSkins = function(skin){
+		self.skins = skin;
+		console.log(self.skins);
+	}
+	
 	self.getInitPack = function(){
 		return {
 			id:self.id,
@@ -184,6 +190,8 @@ var Player = function(param){
 			mouseAngle:self.mouseAngle,
 			animCounter:self.animCounter,
 			isZombie:self.isZombie,
+			name:self.name,
+			skins: self.skins,
 		};		
 	}
 	self.getUpdatePack = function(){
@@ -198,6 +206,7 @@ var Player = function(param){
 			//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 			animCounter:self.animCounter,
 			isZombie:self.isZombie,
+			skins: self.skins,
 		}	
 	}
 	
@@ -226,6 +235,13 @@ Player.onConnect = function(socket){
 			player.pressingAttack = data.state;
 		else if(data.inputId === 'mouseAngle')
 			player.mouseAngle = data.state;
+	});
+	
+	socket.on('boughtHarambe',function(data){
+		player.updateSkins(data);
+	});
+	socket.on('updateScore',function(data){
+		player.score = data;
 	});
 	
 	socket.emit('init',{
@@ -339,6 +355,7 @@ Bullet.getAllInitPack = function(){
 
 var DEBUG = true;
 var counter = 0;
+var pCounter = 0;
 var NAMES_LIST = [];
 var DISCONECTED_LIST = [];
 var io = require('socket.io')(serv,{});
@@ -349,16 +366,17 @@ io.sockets.on('connection', function(socket){
 	socket.on('signIn',function(data){
 		NAMES_LIST[socket.id] = data;
 		counter++;
+		pCounter++;
 		Player.onConnect(socket);
 		socket.emit('signInResponse',{success:true});
 		
 	});
-	
-	
+
 	socket.on('disconnect',function(){
 		delete SOCKET_LIST[socket.id];
 		delete NAMES_LIST[socket.id];
 		DISCONECTED_LIST.push(socket.id);
+		pCounter--;
 		Player.onDisconnect(socket);
 	});
 	socket.on('sendMsgToServer',function(data){
@@ -388,19 +406,27 @@ var running = true;
 //////////////Round
 var roundStarted = false;
 var allZombies = false;
+var displayEnd = false;
 function gameTimer(){
 	partTime++;
 	if(partTime % 25 == 0){
 		partTime = 0;
 		time++;
 		console.log(time);
-		if(time >= 30 && !roundStarted){
+		if(time >= 15 && !roundStarted){
 			resetTime();
-			if(NAMES_LIST.length >= 1)
+			roundStarted = !roundStarted;
+			console.log(pCounter + 'pCOunter');
+			if(pCounter >= 1)
 			pickZombie();
-		}else if(time >= 60 && roundStarted){
+		}else if(displayEnd && time >= 10){
+			displayEnd = false;
 			resetTime();
-			if(NAMES_LIST.length >= 1)
+		}else if(time >= 60 && roundStarted){
+			displayEnd = true;
+			resetTime();
+			roundStarted = !roundStarted;
+			if(pCounter >= 1)
 				resetZombie();
 		}else if(roundStarted){
 			allZombies = true;
@@ -410,8 +436,10 @@ function gameTimer(){
 						allZombies = false;
 				}
 			if(allZombies){
+				displayEnd = true;
 				resetZombie();
 				resetTime();
+				roundStarted = !roundStarted;
 			}
 		}
 	}
@@ -420,7 +448,6 @@ function gameTimer(){
 
 function resetTime(){
 	time = 0;
-	roundStarted = !roundStarted;
 }
 function isPlayerOffline(num){
 	for(var i in DISCONECTED_LIST){
@@ -434,6 +461,7 @@ function pickZombie(){
 	var zNum;
 		do{
 			zNum = Math.floor((counter)*Math.random()) + 1;
+			console.log('huh');
 		}while(isPlayerOffline(zNum));
 	console.log(NAMES_LIST[zNum] + " is a zombie");
 	Player.list[zNum].isZombie = true;
@@ -443,6 +471,7 @@ function resetZombie(){
 	for(var i in Player.list){
 		var p = Player.list[i];
 		p.isZombie = false;
+		p.hp = p.hpMax;
 	}
 	allZombies = false;
 }
@@ -460,8 +489,7 @@ setInterval(function(){
 		socket.emit('init',initPack);
 		socket.emit('update',pack);
 		socket.emit('remove',removePack);
-		socket.emit('time',time);
-		socket.emit('roundInfo',{timer:time,roundStarter:roundStarted});
+		socket.emit('roundInfo',{timer:time,roundStarter:roundStarted,displayEnder:displayEnd});
 	}
 	initPack.player = [];
 	initPack.bullet = [];
@@ -470,6 +498,7 @@ setInterval(function(){
 	
 	
 },1000/25);
+
 
 
 
