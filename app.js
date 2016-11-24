@@ -15,13 +15,6 @@ var arrayHeight = 128;
 var arrayWidth = 128;
 var fs = require("fs");
 var collisionText = fs.readFileSync(__dirname + '/bin/collisionMap.txt', "utf-8");
-/*var collisionArray = new Array(arrayHeight);
-for (var i = 0; i < arrayHeight; i++) {
-    collisionArray[i] = new Array(arrayWidth);
-    for (var j = 0; j < arrayWidth; j++) {
-        collisionArray[i][j] = text.charAt(i * arrayWidth + j);
-    }
-}*/
 
 var SOCKET_LIST = {};
 //Player img width and height
