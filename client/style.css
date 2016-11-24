@@ -1,0 +1,59 @@
+html,
+body {
+    width: 100%;
+    height: 100%;
+    margin: 0px;
+    overflow: hidden;
+}
+
+#signDiv-Child {
+    background: #119305;
+    border-radius: 15px;
+    width: 300px;
+    height: 200px;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    margin: -100px 0 0 -150px;
+}
+
+#signDiv-signIn {
+    position: absolute;
+    left: 50%;
+}
+
+h1 {
+    font-weight: bold;
+    text-align: center;
+    size: 20px;
+}
+
+#gameDiv {
+    display: none;
+    margin: 0;
+    padding: 0;
+}
+
+#canvasHolder {
+    padding: 0px;
+    margin: 0;
+    float: left;
+}
+
+#chat {
+	background-color: rgba(100, 100, 100, 0.4);
+	position: absolute;
+	left: 0;
+	top: 75%;
+	height: 25%;
+	width: 20%;
+}
+
+#chat-text {
+	height: 90%;
+}
+
+#chat-input {
+	height: 100%;
+	width: 100%;
+}

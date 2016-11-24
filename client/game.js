@@ -1,9 +1,13 @@
 var socket = io();
 
-var ctx = document.getElementById("ctx").getContext("2d");
-var ctxUi = document.getElementById("ctx-ui").getContext("2d");
-var WIDTH = 500;
-var HEIGHT = 500;
+var canvas = document.getElementById("ctx");
+var canvasUi = document.getElementById("ctx-ui");
+var ctx = canvas.getContext("2d");
+var ctxUi = canvasUi.getContext("2d");
+ctx.canvas.width  = window.innerWidth;
+ctx.canvas.height = window.innerHeight;
+var canvasWidth = ctx.canvas.width;
+var canvasHeight = ctx.canvas.height;
 
 //sign
 var signDiv = document.getElementById('signDiv');
@@ -58,8 +62,8 @@ Img.playerSprite2.src = '/client/img/zombieSprite.png';
 Img.bullet = new Image();
 Img.bullet.src = '/client/img/bullet.png';
 Img.map = {};
-Img.map['forest'] = new Image();
-Img.map['forest'].src = '/client/img/map.png';
+Img.map = new Image();
+Img.map.src = '/client/img/map.png';
 
 
 socket.emit('PlayerImgInfo', { 'height': Img.playerSprite.height / 4, 'width': Img.playerSprite.width / 3 });
@@ -81,8 +85,8 @@ var Player = function(initPack) {
     self.draw = function() {
         if (Player.list[selfId].map !== self.map)
             return;
-        var x = self.x - Player.list[selfId].x + WIDTH / 2;
-        var y = self.y - Player.list[selfId].y + HEIGHT / 2;
+        var x = self.x - Player.list[selfId].x + canvasWidth / 2;
+        var y = self.y - Player.list[selfId].y + canvasHeight / 2;
 
         var hpWidth = 30 * self.hp / self.hpMax;
         ctx.fillStyle = 'green';
@@ -136,8 +140,8 @@ var Bullet = function(initPack) {
         var width = Img.bullet.width / 2;
         var height = Img.bullet.height / 2;
 
-        var x = self.x - Player.list[selfId].x + WIDTH / 2;
-        var y = self.y - Player.list[selfId].y + HEIGHT / 2;
+        var x = self.x - Player.list[selfId].x + canvasWidth / 2;
+        var y = self.y - Player.list[selfId].y + canvasHeight / 2;
 
         ctx.drawImage(Img.bullet,
             0, 0, Img.bullet.width, Img.bullet.height,
@@ -243,11 +247,11 @@ var drawTime = function() {
 
 var drawMap = function() {
     var player = Player.list[selfId];
-    var x = WIDTH / 2 - player.x;
-    var y = HEIGHT / 2 - player.y;
+    var x = canvasWidth / 2 - player.x;
+    var y = canvasHeight / 2 - player.y;
     ctx.fillStyle = 'black';
-    ctx.fillRect(-200, -200, Img.map[player.map].width * 2 + 200, Img.map[player.map].height * 2 + 200);
-    ctx.drawImage(Img.map[player.map], 0, 0, Img.map[player.map].width, Img.map[player.map].height, x, y, Img.map[player.map].width * 2, Img.map[player.map].height * 2);
+    ctx.fillRect(-200, -200, Img.map.width + 200, Img.map.height + 200);
+    ctx.drawImage(Img.map, 0, 0, Img.map.width, Img.map.height, x, y, Img.map.width, Img.map.height);
 }
 
 var drawScore = function() {
@@ -258,7 +262,6 @@ var drawScore = function() {
         ctx.fillStyle = 'white';
         ctx.fillText(Player.list[selfId].score, 0, 30);
     }
-    //var lastScore = null;
 
 document.onkeydown = function(event) {
     if (event.keyCode === 68) //d
