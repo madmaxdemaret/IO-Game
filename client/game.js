@@ -158,7 +158,6 @@ var selfId = null;
 socket.on('init', function(data) {
     if (data.selfId)
         selfId = data.selfId;
-    //{ player : [{id:123,number:'1',x:0,y:0},{id:1,number:'2',x:0,y:0}], bullet: []}
     for (var i = 0; i < data.player.length; i++) {
         new Player(data.player[i]);
     }
@@ -168,7 +167,6 @@ socket.on('init', function(data) {
 });
 
 socket.on('update', function(data) {
-    //{ player : [{id:123,x:0,y:0},{id:1,x:0,y:0}], bullet: []}
     for (var i = 0; i < data.player.length; i++) {
         var pack = data.player[i];
         var p = Player.list[pack.id];
@@ -200,6 +198,7 @@ socket.on('update', function(data) {
             if (pack.y !== undefined)
                 b.y = pack.y;
         }
+        console.log("data.bullet.length");
     }
 });
 
@@ -249,15 +248,12 @@ var drawMap = function() {
     var player = Player.list[selfId];
     var x = canvasWidth / 2 - player.x;
     var y = canvasHeight / 2 - player.y;
-    ctx.fillStyle = 'black';
+    ctx.fillStyle = 'white';
     ctx.fillRect(-200, -200, Img.map.width + 200, Img.map.height + 200);
     ctx.drawImage(Img.map, 0, 0, Img.map.width, Img.map.height, x, y, Img.map.width, Img.map.height);
 }
 
 var drawScore = function() {
-        //if(lastScore === Player.list[selfId].score)
-        //return;
-        //lastScore = Player.list[selfId].score;
         ctx.font = '30px Arial';
         ctx.fillStyle = 'white';
         ctx.fillText(Player.list[selfId].score, 0, 30);

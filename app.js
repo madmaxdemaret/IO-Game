@@ -89,7 +89,6 @@ function Entity(param) {
         var xCU = Math.floor(x / pixelsPerCU);
         var yCU = Math.floor(y / pixelsPerCU);
         var index = yCU * 128 + xCU;
-        console.log(xCU + " " + yCU + " " + " " + index + " " + collisionText.charAt(index));
         return index;
     }
 
@@ -119,7 +118,7 @@ var Player = function(param) {
         self.updateSpd();
         self.updatePosition();
         //shots if mouse if pressed and round has started
-        if (self.pressingAttack && roundStarted == true && !self.isZombie) {
+        if (self.pressingAttack && !self.isZombie) {
             self.shootBullet(self.mouseAngle);
         }
     }
