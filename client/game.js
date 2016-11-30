@@ -198,8 +198,8 @@ socket.on('update', function(data) {
             if (pack.y !== undefined)
                 b.y = pack.y;
         }
-        console.log("data.bullet.length");
     }
+    console.log(data.bullet.length);
 });
 
 socket.on('remove', function(data) {
