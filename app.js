@@ -16,8 +16,8 @@ var collisionText = fs.readFileSync(__dirname + '/bin/collisionMap.txt', "utf-8"
 
 var SOCKET_LIST = {};
 //Player img width and height
-var PimgW = 18;
-var PimgH = 20;
+var PimgW = 16;
+var PimgH = 18;
 var mapWidth = 2048;
 var mapHeight = 2048;
 const pixelsPerCU = 16;
@@ -66,10 +66,17 @@ function Entity(param) {
         //checks for collisions with map borders
         if(x < 0 || x + PimgW > mapWidth || y < 0 || y + PimgH > mapHeight)
             return true;
+
         //checks within map array at each of the four corners
-        if() {
+        //checks right side
+        if(this.getCollisionWithMap(x - PimgW, y - PimgH) || this.getCollisionWithMap(x - PimgW, y) || this.getCollisionWithMap(x - PimgW, y + PimgH)) {
+            return true;
+        }else if(this.getCollisionWithMap(x + PimgW, y - PimgH) || this.getCollisionWithMap(x + PimgW, y) || this.getCollisionWithMap(x + PimgW, y + PimgH)) {
+            return true;
+        }else if(this.getCollisionWithMap(x, y - PimgH) || this.getCollisionWithMap(x, y) || this.getCollisionWithMap(x, y + PimgH)) {
             return true;
         }
+
         //checks for collisions against other players
         for (var i in Player.list) {
             var p = Player.list[i];
@@ -82,9 +89,10 @@ function Entity(param) {
                 return true;
             }
         }
+        return false;
     }
 
-    this.getCollisionWithMap = function(index) {
+    this.getCollisionWithMap = function(x,y) {
         //gets collision index with map collisionText
         var xCU = Math.floor(x / pixelsPerCU);
         var yCU = Math.floor(y / pixelsPerCU);
