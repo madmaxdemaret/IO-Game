@@ -16,8 +16,8 @@ var collisionText = fs.readFileSync(__dirname + '/bin/collisionMap.txt', "utf-8"
 
 var SOCKET_LIST = {};
 //Player img width and height
-var PimgW = 16;
-var PimgH = 18;
+var PimgW = 18/2;
+var PimgH = 20/2;
 var mapWidth = 2048;
 var mapHeight = 2048;
 const pixelsPerCU = 16;
