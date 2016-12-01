@@ -288,8 +288,8 @@ document.onmouseup = function(event) {
     socket.emit('keyPress', { inputId: 'attack', state: false });
 }
 document.onmousemove = function(event) {
-    var x = -250 + event.clientX - 8;
-    var y = -250 + event.clientY - 8;
+    var x = -1 * (canvasWidth/2) + event.clientX - 8;
+    var y = -1 * (canvasHeight/2) + event.clientY - 8;
     var angle = Math.atan2(y, x) / Math.PI * 180;
     socket.emit('keyPress', { inputId: 'mouseAngle', state: angle });
 }
