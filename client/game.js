@@ -139,10 +139,10 @@ var Bullet = function(initPack) {
             return;
         var width = Img.bullet.width / 2;
         var height = Img.bullet.height / 2;
-
+        console.log("dsa");
+        console.log(x - width / 2+" " + y - height / 2);
         var x = self.x - Player.list[selfId].x + canvasWidth / 2;
         var y = self.y - Player.list[selfId].y + canvasHeight / 2;
-
         ctx.drawImage(Img.bullet,
             0, 0, Img.bullet.width, Img.bullet.height,
             x - width / 2, y - height / 2, width, height);
@@ -199,7 +199,6 @@ socket.on('update', function(data) {
                 b.y = pack.y;
         }
     }
-    console.log(data.bullet.length);
 });
 
 socket.on('remove', function(data) {
