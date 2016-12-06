@@ -1,9 +1,7 @@
 var socket = io();
 
 var canvas = document.getElementById("ctx");
-var canvasUi = document.getElementById("ctx-ui");
 var ctx = canvas.getContext("2d");
-var ctxUi = canvasUi.getContext("2d");
 ctx.canvas.width  = window.innerWidth;
 ctx.canvas.height = window.innerHeight;
 var canvasWidth = ctx.canvas.width;
@@ -13,10 +11,29 @@ var canvasHeight = ctx.canvas.height;
 var signDiv = document.getElementById('signDiv');
 var signDivUsername = document.getElementById('signDiv-username');
 var signDivPlay = document.getElementById('signDiv-signIn');
-
+//scoreboard
+var ctxDiv = document.getElementById("ctx-div");
+//shop
+var storeButton = document.getElementById("shop-button");
+var storeMenu = document.getElementById("shop-div-menu");
+var sb1 = document.getElementById("shop-button1");
+var sb2 = document.getElementById("shop-button2");
+var sb3 = document.getElementById("shop-button3");
+var sb4 = document.getElementById("shop-button4");
+var sb5 = document.getElementById("shop-button5");
+//Play Button
 signDivPlay.onclick = function() {
     socket.emit('signIn', signDivUsername.value);
 }
+//Store Button
+storeButton.onclick = function(){
+		if(storeMenu.style.display == 'none'){
+			storeMenu.style.display = 'block';
+		}else{
+			storeMenu.style.display = 'none';
+		}
+	}
+
 socket.on('signInResponse', function(data) {
     if (data.success) {
         signDiv.style.display = 'none';
@@ -81,8 +98,11 @@ var Player = function(initPack) {
     self.mouseAngle = initPack.mouseAngle;
     self.animCounter = initPack.animCounter;
     self.isZombie = initPack.isZombie;
-
+	self.name = initPack.name;
+	self.skins = initPack.skins;
+	
     self.draw = function() {
+        //points = self.score;
         if (Player.list[selfId].map !== self.map)
             return;
         var x = self.x - Player.list[selfId].x + canvasWidth / 2;
@@ -112,11 +132,15 @@ var Player = function(initPack) {
         ///sets moveMod depending on how long moving
         var moveMod = Math.floor(self.animCounter) % 4;
         //picks the sprite from sheet based on directionMod and moveMod
-        if (self.isZombie)
-            var imgPicker = Img.playerSprite2;
-        else
-            var imgPicker = Img.playerSprite;
-        ctx.drawImage(imgPicker, moveMod * spriteW, directionMod * spriteH, spriteW, spriteH, x - width / 2, y - height / 2, width, height);
+        if(self.isZombie)
+				var imgPicker = Img.playerSprite2;
+			else if(!self.isZombie && self.skins == "reg")
+				var imgPicker = Img.playerSprite;
+			else if(!self.isZombie && self.skins == "boughtHarambe")
+				var imgPicker = Img.harambeSprite;
+			else
+				var imgPicker = Img.playerSprite;
+			ctx.drawImage(imgPicker,moveMod*spriteW,directionMod*spriteH,spriteW,spriteH,x-width/2,y-height/2,width,height);
     }
 
     Player.list[self.id] = self;
@@ -139,8 +163,7 @@ var Bullet = function(initPack) {
             return;
         var width = Img.bullet.width / 2;
         var height = Img.bullet.height / 2;
-        console.log("dsa");
-        console.log(x - width / 2+" " + y - height / 2);
+
         var x = self.x - Player.list[selfId].x + canvasWidth / 2;
         var y = self.y - Player.list[selfId].y + canvasHeight / 2;
         ctx.drawImage(Img.bullet,
@@ -187,6 +210,8 @@ socket.on('update', function(data) {
                 p.animCounter = pack.animCounter;
             if (pack.isZombie !== undefined)
                 p.isZombie = pack.isZombie;
+            if(pack.skins !== undefined)
+					p.skins = pack.skins;
         }
     }
     for (var i = 0; i < data.bullet.length; i++) {
@@ -212,16 +237,19 @@ socket.on('remove', function(data) {
 });
 /////////////////////////listens for time and round data from server
 var time = 0;
+var displayEnd = false;
+var roundStarted = false;
 var roundStarted = false;
 socket.on('roundInfo', function(data) {
     time = data.timer;
     roundStarted = data.roundStarter;
+    displayEnd = data.displayEnder;
 });
 
 setInterval(function() {
     if (!selfId)
         return;
-    ctx.clearRect(0, 0, 500, 500);
+    ctx.clearRect(0, 0, 2048, 2048);
     drawMap();
     drawScore();
     drawTime();
@@ -232,31 +260,56 @@ setInterval(function() {
 }, 40);
 
 var roundPharse;
-var drawTime = function() {
-    if (!roundStarted) {
-        roundPharse = 'Round starts in ' + (30 - time);
-    } else {
-        roundPharse = 'Round ends in ' + (60 - time);
-    }
-    ctx.font = '20px Arial';
-    ctx.fillStyle = 'white';
-    ctx.fillText(roundPharse, 200, 30);
+var drawTime = function(){
+	if(!roundStarted && !displayEnd){
+		roundPharse = 'Round starts in ' + (15 - time);
+	}else if(roundStarted && !displayEnd){
+		roundPharse = 'Round ends in ' + (60 - time);
+	}else{
+		roundPharse = 'Review Scores! ' + (10 - time);
+	}
+	
+	if(!displayEnd){
+	    console.log("hey"+ctxDiv.style.display == 'none');
+		if(ctxDiv.style.display == 'block'){
+		ctxDiv.style.display = 'none';
+		}
+	}else{
+	    console.log("de"+ctxDiv.style.display == 'none');
+		if(ctxDiv.style.display == 'none'){
+		var scoresAndNames = "Scores: " + '<br>';
+			for(var i in Player.list){
+				scoresAndNames+= Player.list[i].name +': '+ Player.list[i].score + '<br>';
+				//ctxDiv.innerHTML += '<br>';
+			}
+		ctxDiv.innerHTML = '<span style="font-size:40px; text-align:center;">' + scoresAndNames + '</span>';
+		ctxDiv.style.display = 'block';
+		}
+	}
+	ctx.font = '20px Arial';
+	ctx.fillStyle = 'green';
+	ctx.fillText(roundPharse,200,30);
 }
 
 var drawMap = function() {
     var player = Player.list[selfId];
     var x = canvasWidth / 2 - player.x;
     var y = canvasHeight / 2 - player.y;
-    ctx.fillStyle = 'white';
-    ctx.fillRect(-200, -200, Img.map.width + 200, Img.map.height + 200);
     ctx.drawImage(Img.map, 0, 0, Img.map.width, Img.map.height, x, y, Img.map.width, Img.map.height);
 }
 
 var drawScore = function() {
         ctx.font = '30px Arial';
-        ctx.fillStyle = 'white';
+        ctx.fillStyle = 'green';
         ctx.fillText(Player.list[selfId].score, 0, 30);
     }
+
+sb1.onclick = function(){
+	if(Player.list[selfId].score >= 10){
+		socket.emit('updateScore', Player.list[selfId].score-10);
+		socket.emit('boughtHarambe', "boughtHarambe");
+	}
+}
 
 document.onkeydown = function(event) {
     if (event.keyCode === 68) //d

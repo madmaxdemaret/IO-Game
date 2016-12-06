@@ -5,25 +5,39 @@
     <title>Zaron.io</title>
     <script src="https://cdn.socket.io/socket.io-1.4.5.js"></script>
     <link rel="stylesheet" type="text/css" href="/client/style.css">
+    
 </head>
 
 <body>
+    
     <div id="signDiv">
-        <div id="signDivChild">Username:
-            <input id="signDiv-username" type="text"></input>
-            <br>
-            <button id="signDiv-signIn">Play!</button>
-            <br>
-            <br>
-            <br>
-            <h1>Zaron.io</h1>
-        </div>
+        <img src="https://s15.postimg.org/fbg59fm2z/frame1.png" alt="Smiley face" style="padding: 0px;max-width: 100%;">
+	    <div id="signDivChild">
+		    <div id = "box">Username:
+		    	<input id="signDiv-username" type="text"></input><br>
+		    	    <button id="signDiv-signIn">Play!</button><br><br><br>
+		    	<h1>Zaron.io</h1>
+		    </div>
+    	</div>
     </div>
+    
+    
     <div id="gameDiv">
         <div id="canvasHolder">
             <canvas id="ctx"></canvas>
-            <canvas id="ctx-ui"></canvas>
+            <div id="ctx-div" style ="display: none"></div>
+	        <div id="shop-div">
+		        <button id="shop-button">Point Shop</button>
+		        <div id="shop-div-menu">
+				    <button id="shop-button1" style="position:absolute;left:5%;top:10%">skin1</button>
+				    <button id="shop-button2" style="position:absolute;left:5%;top:30%">skin2</button>
+			    	<button id="shop-button3" style="position:absolute;left:5%;top:50%">skin3</button>
+			    	<button id="shop-button4" style="position:absolute;left:5%;top:70%">skin4</button>
+			    	<button id="shop-button5" style="position:absolute;left:5%;top:90%">skin5</button>
+			    </div>
+			</div>
         </div>
+        
         <div id="chat">
             <div id="chat-text">
                 <div>Type to your friends here!</div>
@@ -33,6 +47,8 @@
             </form>
         </div>
     </div>
+</div>
+    
     <script src="/client/game.js"></script>
 </body>
 

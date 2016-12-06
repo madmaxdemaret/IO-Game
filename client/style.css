@@ -7,7 +7,12 @@ body {
     overflow: hidden;
 }
 
-#signDiv-Child {
+img {
+    width: 100%;
+    height: 100%;
+}
+
+#signDivChild {
     background: #119305;
     border-radius: 15px;
     width: 300px;
@@ -18,9 +23,18 @@ body {
     margin: -100px 0 0 -150px;
 }
 
-#signDiv-signIn {
+#box {
     position: absolute;
-    left: 50%;
+    top: 5%;
+    left: 10%;
+    
+}
+
+#signDiv-signIn {
+    position:absolute;
+    left:50%;
+    border-radius: 15px;
+    
 }
 
 h1 {
@@ -28,17 +42,48 @@ h1 {
     text-align: center;
     size: 20px;
 }
-
-#gameDiv {
+#gameDiv{
     display: none;
-    margin: 0;
-    padding: 0;
 }
 
-#canvasHolder {
+#ctx-div{
+     border:5px solid #b8d2d3;
+     background:#c7e4e5;
+     border-radius: 15px;
+     width:300px;
+     height:300px;
+     margin: 0 auto;
+     padding: 0px;
+     position:absolute;
+     right: 100px;
+     top: 100px;
+}
+
+#shop-div{
+    width:500px;
+    height:500px;
+    margin: 0 auto;
     padding: 0px;
-    margin: 0;
-    float: left;
+}
+
+#shop-button{
+     position:absolute;
+     left:90%;
+     top:93%;
+}
+
+#shop-div-menu{
+     border:5px solid #b8d2d3;
+     background:#c7e4e5;
+     border-radius: 15px;
+     display:none;
+     width:300px;
+     height:300px;
+     margin: 0 auto;
+     padding: 0px;
+     position:absolute;
+     left: 100px;
+     top: 100px;
 }
 
 #chat {
@@ -49,7 +94,6 @@ h1 {
 	height: 25%;
 	width: 20%;
 }
-
 #chat-text {
 	height: 90%;
 }

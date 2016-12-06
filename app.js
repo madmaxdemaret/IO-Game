@@ -69,11 +69,11 @@ function Entity(param) {
 
         //checks within map array at each of the four corners
         //checks right side
-        if(this.getCollisionWithMap(x - PimgW, y + PimgH)) {
+        if(this.getCollisionWithMap(x - PimgW, y + PimgH) || this.getCollisionWithMap(x - PimgW, y + PimgH*2)) {
             return true;
-        }else if(this.getCollisionWithMap(x + PimgW, y + PimgH)) {
+        }else if(this.getCollisionWithMap(x + PimgW, y + PimgH) || this.getCollisionWithMap(x + PimgW, y + PimgH*2)) {
             return true;
-        }else if(this.getCollisionWithMap(x, y + PimgH)) {
+        }else if(this.getCollisionWithMap(x, y + PimgH) || this.getCollisionWithMap(x, y + PimgH*2)) {
             return true;
         }
 
@@ -350,7 +350,7 @@ Bullet.getAllInitPack = function() {
     return bullets;
 }
 
-var DEBUG = true;
+var DEBUG = false;
 var counter = 0;
 var pCounter = 0;
 var NAMES_LIST = [];
