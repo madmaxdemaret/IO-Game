@@ -78,19 +78,44 @@ Img.playerSprite2 = new Image();
 Img.playerSprite2.src = '/client/img/zombieSprite.png';
 Img.bullet = new Image();
 Img.bullet.src = '/client/img/bullet.png';
+Img.obj = new Image();
+Img.obj.src = '/client/img/obj.png';
 Img.map = {};
-Img.map = new Image();
-Img.map.src = '/client/img/map.png';
+Img.map.floor = new Image();
+Img.map.floor.src = '/client/img/floor.png';
+Img.map.walls = new Image();
+Img.map.walls.src = '/client/img/walls.png';
 
+function Entity() {
+    this.init = function(initPack, imgParam) {
+        this.id = initPack.id;
+        this.x = initPack.x;
+        this.y = initPack.y;
+        this.width = imgParam.width / 2;
+        this.height = imgParam.height / 2;
 
-socket.emit('PlayerImgInfo', { 'height': Img.playerSprite.height / 4, 'width': Img.playerSprite.width / 3 });
+    }
 
+    this.drawSelf = function() {}
+    this.drawAttributes = function() {}
+
+    this.update = function() {
+        this.relativeX = this.x - Player.list[selfId].x + canvasWidth / 2;
+        this.relativeY = this.y - Player.list[selfId].y + canvasHeight / 2;
+    }
+
+    this.draw = function(part) {
+        if (part == 'self'){
+            this.drawSelf();
+        }else if (part == 'attributes')
+            this.drawAttributes();
+    }
+}
+///////////////////////////////////////////////////////////////////////////////////////////////////////
 var Player = function(initPack) {
-    var self = {};
-    self.id = initPack.id;
+    var self = new Entity();
+    self.init(initPack, Img.playerSprite);
     self.number = initPack.number;
-    self.x = initPack.x;
-    self.y = initPack.y;
     self.hp = initPack.hp;
     self.hpMax = initPack.hpMax;
     self.score = initPack.score;
@@ -98,25 +123,14 @@ var Player = function(initPack) {
     self.mouseAngle = initPack.mouseAngle;
     self.animCounter = initPack.animCounter;
     self.isZombie = initPack.isZombie;
-	self.name = initPack.name;
-	self.skins = initPack.skins;
-	
-    self.draw = function() {
-        //points = self.score;
-        if (Player.list[selfId].map !== self.map)
-            return;
-        var x = self.x - Player.list[selfId].x + canvasWidth / 2;
-        var y = self.y - Player.list[selfId].y + canvasHeight / 2;
+    self.name = initPack.name;
+    self.skins = initPack.skins;
 
-        var hpWidth = 30 * self.hp / self.hpMax;
-        ctx.fillStyle = 'green';
-        ctx.fillRect(x - hpWidth / 2, y - 40, hpWidth, 4);
-        ///////////////player width and height///
-        var width = Img.playerSprite.width / 4 * 2;
-        var height = Img.playerSprite.height / 4 * 2;
-        ///////////////sprite///////////////////
-        var spriteW = Img.playerSprite.width / 4;
-        var spriteH = Img.playerSprite.height / 4;
+    ///////////////sprite///////////////////
+    self.spriteW = Img.playerSprite.width / 4;
+    self.spriteH = Img.playerSprite.height / 4;
+
+    self.drawSelf = function() {
         //gets mouse angel and makes it positive if negative
         var mouseAngle = self.mouseAngle;
         if (mouseAngle < 0)
@@ -133,14 +147,21 @@ var Player = function(initPack) {
         var moveMod = Math.floor(self.animCounter) % 4;
         //picks the sprite from sheet based on directionMod and moveMod
         if(self.isZombie)
-				var imgPicker = Img.playerSprite2;
-			else if(!self.isZombie && self.skins == "reg")
-				var imgPicker = Img.playerSprite;
-			else if(!self.isZombie && self.skins == "boughtHarambe")
-				var imgPicker = Img.harambeSprite;
-			else
-				var imgPicker = Img.playerSprite;
-			ctx.drawImage(imgPicker,moveMod*spriteW,directionMod*spriteH,spriteW,spriteH,x-width/2,y-height/2,width,height);
+			var imgPicker = Img.playerSprite2;
+		else if(!self.isZombie && self.skins == "reg")
+			var imgPicker = Img.playerSprite;
+		else if(!self.isZombie && self.skins == "boughtHarambe")
+			var imgPicker = Img.harambeSprite;
+		else
+			var imgPicker = Img.playerSprite;
+		ctx.drawImage(imgPicker, moveMod * self.spriteW, directionMod * self.spriteH, self.spriteW, self.spriteH, self.relativeX - self.width / 2, self.relativeY - self.height / 2, self.width, self.height);
+    }
+
+    self.drawAttributes = function() {
+        //draw health bar
+        var hpWidth = 30 * self.hp / self.hpMax;
+        ctx.fillStyle = 'green';
+        ctx.fillRect(self.relativeX - hpWidth / 2, self.relativeY - 40, hpWidth, 4);
     }
 
     Player.list[self.id] = self;
@@ -149,32 +170,51 @@ var Player = function(initPack) {
     return self;
 }
 Player.list = {};
-
+////////////////////////////////////////////////////////////////////////////////
 
 var Bullet = function(initPack) {
-    var self = {};
+    var self = new Entity();
+    self.init(initPack, Img.bullet);
     self.id = initPack.id;
     self.x = initPack.x;
     self.y = initPack.y;
-    self.map = initPack.map;
-
-    self.draw = function() {
-        if (Player.list[selfId].map !== self.map)
-            return;
-        var width = Img.bullet.width / 2;
-        var height = Img.bullet.height / 2;
-
-        var x = self.x - Player.list[selfId].x + canvasWidth / 2;
-        var y = self.y - Player.list[selfId].y + canvasHeight / 2;
-        ctx.drawImage(Img.bullet,
-            0, 0, Img.bullet.width, Img.bullet.height,
-            x - width / 2, y - height / 2, width, height);
+    self.drawSelf = function() {
+        console.log("bullet: " + self.x + " " + self.y);
+        if(Player.list[selfId].map !== self.map)
+				return;
+			var width = Img.bullet.width/2;
+			var height = Img.bullet.height/2;
+			
+			var x = self.x - Player.list[selfId].x + canvasWidth/2;
+			var y = self.y - Player.list[selfId].y + canvasHeight/2;
+			
+			ctx.drawImage(Img.bullet,
+				0,0,Img.bullet.width,Img.bullet.height,
+				x-width/2,y-height/2,width,height);
     }
 
     Bullet.list[self.id] = self;
     return self;
 }
 Bullet.list = {};
+////////////////////////////////////////////////////////////////////////////////
+var Objective = function(initPack) {
+    var self = new Entity();
+    self.init(initPack, Img.obj);
+    self.x = initPack.x;
+    self.y = initPack.y;
+    self.drawSelf = function() {
+        console.log("like to get: " + self.x + " " + self.y);
+        ctx.drawImage(Img.obj, 0, 0, Img.obj.width, Img.obj.height, 1024 - self.width / 2, 1024 - self.height / 2, self.width, self.height);
+    }
+
+    Objective.list[self.id] = self;
+    return self;
+}
+Objective.list = {};
+
+
+
 
 var selfId = null;
 
@@ -186,6 +226,9 @@ socket.on('init', function(data) {
     }
     for (var i = 0; i < data.bullet.length; i++) {
         new Bullet(data.bullet[i]);
+    }
+    for (var i = 0; i < data.obj.length; i++) {
+        new Objective(data.obj[i]);
     }
 });
 
@@ -211,17 +254,27 @@ socket.on('update', function(data) {
             if (pack.isZombie !== undefined)
                 p.isZombie = pack.isZombie;
             if(pack.skins !== undefined)
-					p.skins = pack.skins;
+				p.skins = pack.skins;
+			if (pack.underWallLayer !== undefined)
+                p.underWallLayer = pack.underWallLayer;
         }
     }
     for (var i = 0; i < data.bullet.length; i++) {
         var pack = data.bullet[i];
+        var pack2 = data.obj[i];
         var b = Bullet.list[data.bullet[i].id];
+        var o = Objective.list[data.bullet[i].id];
         if (b) {
             if (pack.x !== undefined)
                 b.x = pack.x;
             if (pack.y !== undefined)
                 b.y = pack.y;
+        }
+        if (o) {
+            if (pack.x !== undefined)
+                o.x = pack.x;
+            if (pack.y !== undefined)
+                o.y = pack.y;
         }
     }
 });
@@ -234,7 +287,11 @@ socket.on('remove', function(data) {
     for (var i = 0; i < data.bullet.length; i++) {
         delete Bullet.list[data.bullet[i]];
     }
+    for (var i = 0; i < data.obj.length; i++) {
+        delete Objective.list[data.obj[i]];
+    }
 });
+
 /////////////////////////listens for time and round data from server
 var time = 0;
 var displayEnd = false;
@@ -249,15 +306,38 @@ socket.on('roundInfo', function(data) {
 setInterval(function() {
     if (!selfId)
         return;
-    ctx.clearRect(0, 0, 2048, 2048);
-    drawMap();
+    update();
+    draw();
+}, 40);
+
+function update() {
+    for (var i in Player.list)
+        Player.list[i].update();
+}
+
+function draw() {
+    ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+    drawMap('floor');
+    for (var i in Player.list) {
+        if (!Player.list[i].underWallLayer) {
+            Player.list[i].draw("self");
+        }
+    }
+    drawMap('walls');
     drawScore();
     drawTime();
+    for (var i in Player.list) {
+        if (Player.list[i].underWallLayer) {
+            Player.list[i].draw("self");
+        }
+    }
     for (var i in Player.list)
-        Player.list[i].draw();
+        Player.list[i].draw("attributes")
+    for (var i in Objective.list)
+        Objective.list[i].drawSelf();
     for (var i in Bullet.list)
-        Bullet.list[i].draw();
-}, 40);
+        Bullet.list[i].drawSelf();
+}
 
 var roundPharse;
 var drawTime = function(){
@@ -270,12 +350,10 @@ var drawTime = function(){
 	}
 	
 	if(!displayEnd){
-	    console.log("hey"+ctxDiv.style.display == 'none');
 		if(ctxDiv.style.display == 'block'){
 		ctxDiv.style.display = 'none';
 		}
 	}else{
-	    console.log("de"+ctxDiv.style.display == 'none');
 		if(ctxDiv.style.display == 'none'){
 		var scoresAndNames = "Scores: " + '<br>';
 			for(var i in Player.list){
@@ -291,11 +369,12 @@ var drawTime = function(){
 	ctx.fillText(roundPharse,200,30);
 }
 
-var drawMap = function() {
+var drawMap = function(part) {
     var player = Player.list[selfId];
     var x = canvasWidth / 2 - player.x;
     var y = canvasHeight / 2 - player.y;
-    ctx.drawImage(Img.map, 0, 0, Img.map.width, Img.map.height, x, y, Img.map.width, Img.map.height);
+    var map = Img.map[part];
+    ctx.drawImage(map, 0, 0, map.width, map.height, x, y, map.width, map.height);
 }
 
 var drawScore = function() {

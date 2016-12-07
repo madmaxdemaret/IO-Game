@@ -102,7 +102,13 @@ function Entity(param) {
         else
             return false;
     }
-
+    
+    this.isAboveWall = function() {
+        if(this.getCollisionWithMap(this.x-PimgW, this.y-PimgH-5, "2") || this.getCollisionWithMap(this.x+PimgW, this.y-PimgH-5, "2") || this.getCollisionWithMap(this.x-PimgW, this.y, "2") || this.getCollisionWithMap(this.x+PimgW, this.y, "2") || this.getCollisionWithMap(this.x, this.y-PimgH-5, "2")) {
+            return true;
+        }
+        return false;
+    }
     return this;
 }
 
@@ -171,7 +177,6 @@ var Player = function(param) {
 
     self.updateSkins = function(skin) {
         self.skins = skin;
-        console.log(self.skins);
     }
 
     self.getInitPack = function() {
@@ -204,6 +209,7 @@ var Player = function(param) {
             animCounter: self.animCounter,
             isZombie: self.isZombie,
             skins: self.skins,
+            underWallLayer: self.isAboveWall(),
         }
     }
 
@@ -245,6 +251,7 @@ Player.onConnect = function(socket) {
         selfId: socket.id,
         player: Player.getAllInitPack(),
         bullet: Bullet.getAllInitPack(),
+        obj: Objective.getAllInitPack(),
     })
 }
 Player.getAllInitPack = function() {
@@ -268,7 +275,7 @@ Player.update = function() {
     return pack;
 }
 
-
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 var Bullet = function(param) {
     var self = new Entity(param);
     self.id = Math.random();
@@ -284,6 +291,7 @@ var Bullet = function(param) {
         if (self.timer++ > 100)
             self.toRemove = true;
         self.updatePosition();
+        console.log(self.x +" "+ self.y);
 
         for (var i in Player.list) {
             var p = Player.list[i];
@@ -349,6 +357,72 @@ Bullet.getAllInitPack = function() {
         bullets.push(Bullet.list[i].getInitPack());
     return bullets;
 }
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+var Objective = function(param){
+    var self = new Entity(param);
+    self.x = 1024;
+    self.y = 1024;
+    self.timer = time;
+    self.toRemove = false;
+    
+    self.update = function() {
+        if (self.timer - time == 20)
+            self.toRemove = true;
+            
+        for (var i in Player.list) {
+            var p = Player.list[i];
+            if(self.map === p.map && !p.isZombie){
+                if (self.x - PimgW < p.x + PimgW && self.x + PimgW > p.x - PimgW && self.y - PimgH < p.y + PimgH && self.y + PimgH > p.y - PimgH && Player.list[this.id] != Player.list[i]){
+                    p.score+10;
+                    self.toRemove = true;
+                }
+            }
+        }
+    }
+    
+    self.getInitPack = function() {
+        return {
+            id: self.id,
+            x: self.x,
+            y: self.y,
+            map: self.map,
+        };
+    }
+    self.getUpdatePack = function() {
+        return {
+            id: self.id,
+            x: self.x,
+            y: self.y,
+        };
+    }
+
+    Objective.list[self.id] = self;
+    initPack.obj.push(self.getInitPack());
+    return self;
+}
+
+Objective.list = {};
+
+Objective.update = function() {
+    var pack = [];
+    for (var i in Objective.list) {
+        var obj = Objective.list[i];
+        obj.update();
+        if (obj.toRemove) {
+            delete Objective.list[i];
+            removePack.obj.push(obj.id);
+        } else
+            pack.push(obj.getUpdatePack());
+    }
+    return pack;
+}
+
+Objective.getAllInitPack = function() {
+    var objs = [];
+    for (var i in Objective.list)
+        objs.push(Objective.list[i].getInitPack());
+    return objs;
+}
 
 var DEBUG = false;
 var counter = 0;
@@ -394,8 +468,8 @@ io.sockets.on('connection', function(socket) {
 
 });
 
-var initPack = { player: [], bullet: [] };
-var removePack = { player: [], bullet: [] };
+var initPack = { player: [], bullet: [], obj: [] };
+var removePack = { player: [], bullet: [], obj: []};
 ///////////////Time
 var partTime = 0;
 var time = 0;
@@ -415,6 +489,7 @@ function gameTimer() {
             resetTime();
             roundStarted = !roundStarted;
             //console.log(pCounter + 'pCOunter');
+            Obj();
             if (pCounter >= 1)
                 pickZombie();
         } else if (displayEnd && time >= 10) {
@@ -460,7 +535,6 @@ function pickZombie() {
     var zNum;
     do {
         zNum = Math.floor((counter) * Math.random()) + 1;
-        console.log('huh');
     } while (isPlayerOffline(zNum));
     console.log(NAMES_LIST[zNum] + " is a zombie");
     Player.list[zNum].isZombie = true;
@@ -475,12 +549,17 @@ function resetZombie() {
     allZombies = false;
 }
 
+var Obj = function() {
+    Objective({});
+}
+
 setInterval(function() {
     gameTimer();
 
     var pack = {
         player: Player.update(),
         bullet: Bullet.update(),
+        obj: Objective.update(),
     }
 
     for (var i in SOCKET_LIST) {
@@ -492,8 +571,10 @@ setInterval(function() {
     }
     initPack.player = [];
     initPack.bullet = [];
+    initPack.obj = [];
     removePack.player = [];
     removePack.bullet = [];
+    removePack.obj = [];
 
 
 }, 1000 / 25);
