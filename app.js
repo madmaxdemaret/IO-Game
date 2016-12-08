@@ -16,42 +16,27 @@ var collisionText = fs.readFileSync(__dirname + '/bin/collisionMap.txt', "utf-8"
 
 var SOCKET_LIST = {};
 //Player img width and height
-var PimgW = 18/2;
-var PimgH = 20/2;
+var PimgW = 18 / 2;
+var PimgH = 20 / 2;
 var mapWidth = 2048;
 var mapHeight = 2048;
 const pixelsPerCU = 16;
 
 function Entity(param) {
-	this.collision = false;
-
     //detects if there is a collision with any player and only spawns when there is no collision
     this.init = function() {
-	    do {
-	        this.collision = false;
-	        var spawnX = ((mapWidth - 100) - 100 + 1) * Math.random() + 100;
-	        var spawnY = ((mapHeight - 100) - 100 + 1) * Math.random() + 100;
-	        if (this.checkForCollision(spawnX, spawnY)) {
-	            this.collision = true;
-	        }
-	    } while (this.collision);
-	    //declares all the this variables for all entities
-	    //randomly generated spawn.
-	    this.x = spawnX;
-	    this.y = spawnY;
-	    this.id = "";
-	    this.map = 'forest';
-	    if (param) {
-	        if (param.x)
-	            this.x = param.x;
-	        if (param.y)
-	            this.y = param.y;
-	        if (param.map)
-	            this.map = param.map;
-	        if (param.id)
-	            this.id = param.id;
-	    }
-	}
+        //declares all the this variables for all entities
+        if (param) {
+            if (param.x)
+                this.x = param.x;
+            if (param.y)
+                this.y = param.y;
+            if (param.map)
+                this.map = param.map;
+            if (param.id)
+                this.id = param.id;
+        }
+    }
 
     this.updatePosition = function() {
         this.x += this.spdX;
@@ -62,18 +47,18 @@ function Entity(param) {
     }
 
     //method that checks for all collisions, returns boolean
-    this.checkForCollision = function(x,y) {
+    this.checkForCollision = function(x, y) {
         //checks for collisions with map borders
-        if(x < 0 || x + PimgW > mapWidth || y < 0 || y + PimgH > mapHeight)
+        if (x < 0 || x + PimgW > mapWidth || y < 0 || y + PimgH > mapHeight)
             return true;
 
         //checks within map array at each of the four corners
         //checks right side
-        if(this.getCollisionWithMap(x - PimgW, y + PimgH) || this.getCollisionWithMap(x - PimgW, y + PimgH*2)) {
+        if (this.getCollisionWithMap(x - PimgW, y + PimgH) || this.getCollisionWithMap(x - PimgW, y + PimgH * 2)) {
             return true;
-        }else if(this.getCollisionWithMap(x + PimgW, y + PimgH) || this.getCollisionWithMap(x + PimgW, y + PimgH*2)) {
+        } else if (this.getCollisionWithMap(x + PimgW, y + PimgH) || this.getCollisionWithMap(x + PimgW, y + PimgH * 2)) {
             return true;
-        }else if(this.getCollisionWithMap(x, y + PimgH) || this.getCollisionWithMap(x, y + PimgH*2)) {
+        } else if (this.getCollisionWithMap(x, y + PimgH) || this.getCollisionWithMap(x, y + PimgH * 2)) {
             return true;
         }
 
@@ -81,7 +66,6 @@ function Entity(param) {
         for (var i in Player.list) {
             var p = Player.list[i];
             if (x - PimgW < p.x + PimgW && x + PimgW > p.x - PimgW && y - PimgH < p.y + PimgH && y + PimgH > p.y - PimgH && Player.list[this.id] != Player.list[i]) {
-                console.log('collison detected');
                 if (p.isZombie || this.isZombie) {
                     p.isZombie = true;
                     this.isZombie = true;
@@ -92,19 +76,19 @@ function Entity(param) {
         return false;
     }
 
-    this.getCollisionWithMap = function(x,y) {
+    this.getCollisionWithMap = function(x, y) {
         //gets collision index with map collisionText
         var xCU = Math.floor(x / pixelsPerCU);
         var yCU = Math.floor(y / pixelsPerCU);
         var index = yCU * 128 + xCU;
-        if(collisionText.charAt(index) == "1")
+        if (collisionText.charAt(index) == "1")
             return true;
         else
             return false;
     }
-    
+
     this.isAboveWall = function() {
-        if(this.getCollisionWithMap(this.x-PimgW, this.y-PimgH-5, "2") || this.getCollisionWithMap(this.x+PimgW, this.y-PimgH-5, "2") || this.getCollisionWithMap(this.x-PimgW, this.y, "2") || this.getCollisionWithMap(this.x+PimgW, this.y, "2") || this.getCollisionWithMap(this.x, this.y-PimgH-5, "2")) {
+        if (this.getCollisionWithMap(this.x - PimgW, this.y - PimgH - 5, "2") || this.getCollisionWithMap(this.x + PimgW, this.y - PimgH - 5, "2") || this.getCollisionWithMap(this.x - PimgW, this.y, "2") || this.getCollisionWithMap(this.x + PimgW, this.y, "2") || this.getCollisionWithMap(this.x, this.y - PimgH - 5, "2")) {
             return true;
         }
         return false;
@@ -131,6 +115,12 @@ var Player = function(param) {
     self.name = NAMES_LIST[counter];
     self.skins = "reg";
 
+    //randomly generated spawn.
+    do {
+        self.x = ((mapWidth - 100) - 100 + 1) * Math.random() + 100;
+        self.y = ((mapHeight - 100) - 100 + 1) * Math.random() + 100;
+    } while (self.checkForCollision(this.x, this.y));
+
     self.update = function() {
         self.updateSpd();
         self.updatePosition();
@@ -145,7 +135,6 @@ var Player = function(param) {
             angle: angle,
             x: self.x,
             y: self.y,
-            map: self.map,
         });
     }
 
@@ -220,10 +209,8 @@ var Player = function(param) {
 }
 Player.list = {};
 Player.onConnect = function(socket) {
-    var map = 'forest';
     var player = Player({
         id: socket.id,
-        map: map,
     });
     socket.on('keyPress', function(data) {
         if (data.inputId === 'left')
@@ -278,6 +265,7 @@ Player.update = function() {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 var Bullet = function(param) {
     var self = new Entity(param);
+    self.init();
     self.id = Math.random();
     self.angle = param.angle;
     self.spdX = Math.cos(param.angle / 180 * Math.PI) * 10;
@@ -291,7 +279,6 @@ var Bullet = function(param) {
         if (self.timer++ > 100)
             self.toRemove = true;
         self.updatePosition();
-        console.log(self.x +" "+ self.y);
 
         for (var i in Player.list) {
             var p = Player.list[i];
@@ -352,34 +339,34 @@ Bullet.update = function() {
 }
 
 Bullet.getAllInitPack = function() {
-    var bullets = [];
-    for (var i in Bullet.list)
-        bullets.push(Bullet.list[i].getInitPack());
-    return bullets;
-}
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-var Objective = function(param){
+        var bullets = [];
+        for (var i in Bullet.list)
+            bullets.push(Bullet.list[i].getInitPack());
+        return bullets;
+    }
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+var Objective = function(param) {
     var self = new Entity(param);
     self.x = 1024;
     self.y = 1024;
     self.timer = time;
     self.toRemove = false;
-    
+
     self.update = function() {
         if (self.timer - time == 20)
             self.toRemove = true;
-            
+
         for (var i in Player.list) {
             var p = Player.list[i];
-            if(self.map === p.map && !p.isZombie){
-                if (self.x - PimgW < p.x + PimgW && self.x + PimgW > p.x - PimgW && self.y - PimgH < p.y + PimgH && self.y + PimgH > p.y - PimgH && Player.list[this.id] != Player.list[i]){
-                    p.score+10;
+            if (self.map === p.map && !p.isZombie) {
+                if (self.x - PimgW < p.x + PimgW && self.x + PimgW > p.x - PimgW && self.y - PimgH < p.y + PimgH && self.y + PimgH > p.y - PimgH && Player.list[this.id] != Player.list[i]) {
+                    p.score + 10;
                     self.toRemove = true;
                 }
             }
         }
     }
-    
+
     self.getInitPack = function() {
         return {
             id: self.id,
@@ -469,7 +456,7 @@ io.sockets.on('connection', function(socket) {
 });
 
 var initPack = { player: [], bullet: [], obj: [] };
-var removePack = { player: [], bullet: [], obj: []};
+var removePack = { player: [], bullet: [], obj: [] };
 ///////////////Time
 var partTime = 0;
 var time = 0;
@@ -484,11 +471,9 @@ function gameTimer() {
     if (partTime % 25 == 0) {
         partTime = 0;
         time++;
-        //console.log(time);
         if (time >= 15 && !roundStarted) {
             resetTime();
             roundStarted = !roundStarted;
-            //console.log(pCounter + 'pCOunter');
             Obj();
             if (pCounter >= 1)
                 pickZombie();

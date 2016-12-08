@@ -110,6 +110,7 @@ function Entity() {
         }else if (part == 'attributes')
             this.drawAttributes();
     }
+
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 var Player = function(initPack) {
@@ -119,7 +120,6 @@ var Player = function(initPack) {
     self.hp = initPack.hp;
     self.hpMax = initPack.hpMax;
     self.score = initPack.score;
-    self.map = initPack.map;
     self.mouseAngle = initPack.mouseAngle;
     self.animCounter = initPack.animCounter;
     self.isZombie = initPack.isZombie;
@@ -179,9 +179,6 @@ var Bullet = function(initPack) {
     self.x = initPack.x;
     self.y = initPack.y;
     self.drawSelf = function() {
-        console.log("bullet: " + self.x + " " + self.y);
-        if(Player.list[selfId].map !== self.map)
-				return;
 			var width = Img.bullet.width/2;
 			var height = Img.bullet.height/2;
 			
@@ -318,6 +315,7 @@ function update() {
 function draw() {
     ctx.clearRect(0, 0, canvasWidth, canvasHeight);
     drawMap('floor');
+
     for (var i in Player.list) {
         if (!Player.list[i].underWallLayer) {
             Player.list[i].draw("self");
