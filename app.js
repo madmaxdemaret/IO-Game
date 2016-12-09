@@ -114,19 +114,40 @@ var Player = function(param) {
     self.isZombie = roundStarted;
     self.name = NAMES_LIST[counter];
     self.skins = "reg";
-
+    self.bCounter = 0;
+    self.reloadTime = 5;
+    self.timeBetweenBullets = 25/6.25; //.25 seconds calculated by taking 25 fps / 6.25 = 4 so its 1/4 of a second
+    self.partTimer = 0;
+    self.timer = 0;
+    self.hasMag = true;////////////ammo in a clip
+    self.hasAmmo = true;/////////////havent used/ limits total ammo
     //randomly generated spawn.
     do {
         self.x = ((mapWidth - 100) - 100 + 1) * Math.random() + 100;
         self.y = ((mapHeight - 100) - 100 + 1) * Math.random() + 100;
-    } while (self.checkForCollision(this.x, this.y));
+    } while (self.checkForCollision(self.x, self.y));
 
     self.update = function() {
         self.updateSpd();
         self.updatePosition();
-        //shots if mouse if pressed and round has started
-        if (self.pressingAttack && !self.isZombie) {
-            self.shootBullet(self.mouseAngle);
+        
+        //shots if mouse if pressed and round has started and reload time //***********remember to add only shoot at the start of the round
+        if (self.pressingAttack && !self.isZombie && roundStarted){
+            if(self.partTimer == 0){
+                self.partTimer = partTime;
+            }
+            if(self.hasMag && self.hasAmmo && partTime - self.partTimer >= self.timeBetweenBullets) {
+                self.bCounter++;
+                self.partTimer = 0;
+                self.shootBullet(self.mouseAngle);
+                if(self.bCounter > 20){
+                    self.hasMag = false;
+                    self.timer = time;
+                    self.bCounter = 0;
+                }
+            }else if(self.timer != 0 && time - self.timer >= self.reloadTime){
+                self.hasMag = true;
+            }
         }
     }
     self.shootBullet = function(angle) {
@@ -268,8 +289,8 @@ var Bullet = function(param) {
     self.init();
     self.id = Math.random();
     self.angle = param.angle;
-    self.spdX = Math.cos(param.angle / 180 * Math.PI) * 10;
-    self.spdY = Math.sin(param.angle / 180 * Math.PI) * 10;
+    self.spdX = Math.cos(param.angle / 180 * Math.PI) * 20;
+    self.spdY = Math.sin(param.angle / 180 * Math.PI) * 20;
     self.parent = param.parent;
 
     self.timer = 0;
@@ -347,20 +368,25 @@ Bullet.getAllInitPack = function() {
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 var Objective = function(param) {
     var self = new Entity(param);
-    self.x = 1024;
+    self.id = Math.random();
+    self.init();
+    self.x = 1064;
     self.y = 1024;
     self.timer = time;
     self.toRemove = false;
+    self.w = (75/2);
+    self.h = (75/2);
 
     self.update = function() {
-        if (self.timer - time == 20)
+        if (time - self.timer >= 20)
             self.toRemove = true;
 
         for (var i in Player.list) {
             var p = Player.list[i];
-            if (self.map === p.map && !p.isZombie) {
-                if (self.x - PimgW < p.x + PimgW && self.x + PimgW > p.x - PimgW && self.y - PimgH < p.y + PimgH && self.y + PimgH > p.y - PimgH && Player.list[this.id] != Player.list[i]) {
-                    p.score + 10;
+            if (!p.isZombie) {
+                if (self.x - self.w < p.x + PimgW && self.x + self.w > p.x - PimgW && self.y - self.h < p.y + PimgH && self.y + self.h > p.y - PimgH && Player.list[this.id] != Player.list[i]) {
+                    console.log("gem detected");
+                    p.score +=10;
                     self.toRemove = true;
                 }
             }
@@ -398,6 +424,7 @@ Objective.update = function() {
         if (obj.toRemove) {
             delete Objective.list[i];
             removePack.obj.push(obj.id);
+            console.log("obj has been removeed");
         } else
             pack.push(obj.getUpdatePack());
     }
@@ -469,24 +496,24 @@ var displayEnd = false;
 function gameTimer() {
     partTime++;
     if (partTime % 25 == 0) {
-        partTime = 0;
         time++;
-        if (time >= 15 && !roundStarted) {
+        if (time >= 15 && !roundStarted) { ////////////starts the game after 15 sec prep
             resetTime();
             roundStarted = !roundStarted;
             Obj();
             if (pCounter >= 1)
                 pickZombie();
-        } else if (displayEnd && time >= 10) {
+        } else if (displayEnd && time >= 10) { ////////////displays after end of round score
             displayEnd = false;
             resetTime();
-        } else if (time >= 60 && roundStarted) {
+        } else if (time >= 60 && roundStarted) { ///////////////aftrer 60sec ends round
             displayEnd = true;
             resetTime();
             roundStarted = !roundStarted;
+            resetPartTime();
             if (pCounter >= 1)
                 resetZombie();
-        } else if (roundStarted) {
+        } else if (roundStarted) { ///////////if all plays are zombies ends round
             allZombies = true;
             for (var i in Player.list) {
                 var p = Player.list[i];
@@ -497,6 +524,7 @@ function gameTimer() {
                 displayEnd = true;
                 resetZombie();
                 resetTime();
+                resetPartTime();
                 roundStarted = !roundStarted;
             }
         }
@@ -506,6 +534,10 @@ function gameTimer() {
 
 function resetTime() {
     time = 0;
+}
+
+function resetPartTime(){
+    partTime = 0;
 }
 
 function isPlayerOffline(num) {
@@ -535,7 +567,7 @@ function resetZombie() {
 }
 
 var Obj = function() {
-    Objective({});
+    Objective();
 }
 
 setInterval(function() {

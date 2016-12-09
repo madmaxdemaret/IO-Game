@@ -33,6 +33,13 @@ storeButton.onclick = function(){
 			storeMenu.style.display = 'none';
 		}
 	}
+	
+sb1.onclick = function(){
+	if(Player.list[selfId].score >= 0){
+		socket.emit('updateScore', Player.list[selfId].score-0);
+		socket.emit('boughtHarambe', "boughtHarambe");
+	}
+}
 
 socket.on('signInResponse', function(data) {
     if (data.success) {
@@ -76,6 +83,8 @@ Img.playerSprite = new Image();
 Img.playerSprite.src = '/client/img/humanSprite.png';
 Img.playerSprite2 = new Image();
 Img.playerSprite2.src = '/client/img/zombieSprite.png';
+Img.harambeSprite = new Image();
+Img.harambeSprite.src = '/client/img/harambeSprite.png';
 Img.bullet = new Image();
 Img.bullet.src = '/client/img/bullet.png';
 Img.obj = new Image();
@@ -175,9 +184,6 @@ Player.list = {};
 var Bullet = function(initPack) {
     var self = new Entity();
     self.init(initPack, Img.bullet);
-    self.id = initPack.id;
-    self.x = initPack.x;
-    self.y = initPack.y;
     self.drawSelf = function() {
 			var width = Img.bullet.width/2;
 			var height = Img.bullet.height/2;
@@ -198,11 +204,14 @@ Bullet.list = {};
 var Objective = function(initPack) {
     var self = new Entity();
     self.init(initPack, Img.obj);
-    self.x = initPack.x;
-    self.y = initPack.y;
     self.drawSelf = function() {
-        console.log("like to get: " + self.x + " " + self.y);
-        ctx.drawImage(Img.obj, 0, 0, Img.obj.width, Img.obj.height, 1024 - self.width / 2, 1024 - self.height / 2, self.width, self.height);
+        var width = Img.obj.width/2;
+		var height = Img.obj.height/2;
+			
+		var x = self.x - Player.list[selfId].x + canvasWidth/2;
+		var y = self.y - Player.list[selfId].y + canvasHeight/2;
+			
+        ctx.drawImage(Img.obj, 0, 0, Img.obj.width, Img.obj.height, x - self.width / 2, y - self.height / 2, self.width, self.height);
     }
 
     Objective.list[self.id] = self;
@@ -380,13 +389,6 @@ var drawScore = function() {
         ctx.fillStyle = 'green';
         ctx.fillText(Player.list[selfId].score, 0, 30);
     }
-
-sb1.onclick = function(){
-	if(Player.list[selfId].score >= 10){
-		socket.emit('updateScore', Player.list[selfId].score-10);
-		socket.emit('boughtHarambe', "boughtHarambe");
-	}
-}
 
 document.onkeydown = function(event) {
     if (event.keyCode === 68) //d
