@@ -322,7 +322,27 @@ var Bullet = function(param) {
                 self.toRemove = true;
             }
         }
+        if(self.checkForCollision(self.x, self.y)){
+            self.toRemove = true;
+            console.log("as");
+        }
     }
+    
+    self.checkForCollision = function(x,y){
+        if (x < 0 || x + 32 > mapWidth || y < 0 || y + PimgH > 32)
+            return true;
+
+        //checks within map array at each of the four corners
+        //checks right side
+        //if (this.getCollisionWithMap(x - 32, y + 32) || this.getCollisionWithMap(x - 32, y + 32 * 2)) {
+            //return true;
+        //} else if (this.getCollisionWithMap(x + 32, y + 32) || this.getCollisionWithMap(x + 32, y + 32 * 2)) {
+            //return true;
+       // } else if (this.getCollisionWithMap(x, y + 32) || this.getCollisionWithMap(x, y + 32 * 2)) {
+           // return true;
+        //}
+    }
+    
     self.getInitPack = function() {
         return {
             id: self.id,
