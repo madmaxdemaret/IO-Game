@@ -6,7 +6,13 @@ ctx.canvas.width  = window.innerWidth;
 ctx.canvas.height = window.innerHeight;
 var canvasWidth = ctx.canvas.width;
 var canvasHeight = ctx.canvas.height;
+///mini map
+var canvasMini = document.getElementById("miniMap");
+var ctxMini = canvas.getContext("2d");
+var ctxMiniX = canvasWidth*.9;
+var ctxMiniY = canvasHeight*.025;
 
+var miniMapHolder = document.getElementById("miniMapHolder");
 //sign
 var signDiv = document.getElementById('signDiv');
 var signDivUsername = document.getElementById('signDiv-username');
@@ -27,7 +33,7 @@ signDivPlay.onclick = function() {
 }
 //Store Button
 storeButton.onclick = function(){
-		if(storeMenu.style.display == 'none'){
+		if(storeMenu.style.display != 'block'){
 			storeMenu.style.display = 'block';
 		}else{
 			storeMenu.style.display = 'none';
@@ -89,6 +95,16 @@ Img.bullet = new Image();
 Img.bullet.src = '/client/img/bullet.png';
 Img.obj = new Image();
 Img.obj.src = '/client/img/obj.png';
+Img.pDot = new Image();
+Img.pDot.src = '/client/img/playerDot.png';
+Img.oDot = new Image();
+Img.oDot.src = '/client/img/objDot.png';
+Img.eDot = new Image();
+Img.eDot.src = '/client/img/enemyDot.png';
+Img.fDot = new Image();
+Img.fDot.src = '/client/img/friendDot.png';
+Img.miniMap = new Image();
+Img.miniMap.src = '/client/img/miniMap.png';
 Img.map = {};
 Img.map.floor = new Image();
 Img.map.floor.src = '/client/img/floor.png';
@@ -134,6 +150,8 @@ var Player = function(initPack) {
     self.isZombie = initPack.isZombie;
     self.name = initPack.name;
     self.skins = initPack.skins;
+    self.bCounter = initPack.bCounter;
+    self.partTimer = 0;
 
     ///////////////sprite///////////////////
     self.spriteW = Img.playerSprite.width / 4;
@@ -165,12 +183,33 @@ var Player = function(initPack) {
 			var imgPicker = Img.playerSprite;
 		ctx.drawImage(imgPicker, moveMod * self.spriteW, directionMod * self.spriteH, self.spriteW, self.spriteH, self.relativeX - self.width / 2, self.relativeY - self.height / 2, self.width, self.height);
     }
-
+    
+    self.drawDot = function() {
+        if(self.id == selfId)
+		    var dotPicker = Img.pDot;
+		else if(self.isZombie)
+		    var dotPicker = Img.eDot;
+		else
+		    var dotPicker = Img.fDot;
+		ctxMini.drawImage(dotPicker, 0, 0, dotPicker.width, dotPicker.height, ctxMiniX+self.x/20.48, ctxMiniY+self.y/20.48,dotPicker.width,dotPicker.height);
+    }
+    
     self.drawAttributes = function() {
         //draw health bar
         var hpWidth = 30 * self.hp / self.hpMax;
         ctx.fillStyle = 'green';
         ctx.fillRect(self.relativeX - hpWidth / 2, self.relativeY - 40, hpWidth, 4);
+        if(self.id == selfId){
+            if(self.bCounter != 0){
+                ctx.fillStyle = 'green';
+                ctx.fillRect(canvasWidth*.98,canvasHeight*.025 + (20 - self.bCounter) * canvasHeight/21 ,canvasWidth*.015, self.bCounter * canvasHeight/21);
+                self.partTimer = partTime;
+            }else{
+                ctx.fillStyle = 'red';
+                ctx.fillRect(canvasWidth*.98,canvasHeight*.975, canvasWidth*.015,-(canvasHeight/21)*4*((partTime - self.partTimer)*.04));
+                //ctx.fillRect(canvasWidth*.98,canvasHeight*.025 ,canvasWidth*.015, (partTime - partTimer));
+            }
+        }
     }
 
     Player.list[self.id] = self;
@@ -212,6 +251,7 @@ var Objective = function(initPack) {
 		var y = self.y - Player.list[selfId].y + canvasHeight/2;
 			
         ctx.drawImage(Img.obj, 0, 0, Img.obj.width, Img.obj.height, x - self.width / 2, y - self.height / 2, self.width, self.height);
+        ctxMini.drawImage(Img.oDot, 0, 0, Img.oDot.width, Img.oDot.height, ctxMiniX+self.x/20.48, ctxMiniY+self.y/20.48,Img.oDot.width,Img.oDot.height);
     }
 
     Objective.list[self.id] = self;
@@ -263,6 +303,8 @@ socket.on('update', function(data) {
 				p.skins = pack.skins;
 			if (pack.underWallLayer !== undefined)
                 p.underWallLayer = pack.underWallLayer;
+            if (pack.bCounter !== undefined)
+                p.bCounter = pack.bCounter;
         }
     }
     for (var i = 0; i < data.bullet.length; i++) {
@@ -300,6 +342,7 @@ socket.on('remove', function(data) {
 
 /////////////////////////listens for time and round data from server
 var time = 0;
+var partTime = 0;
 var displayEnd = false;
 var roundStarted = false;
 var roundStarted = false;
@@ -314,6 +357,7 @@ setInterval(function() {
         return;
     update();
     draw();
+    partTime++;
 }, 40);
 
 function update() {
@@ -324,13 +368,13 @@ function update() {
 function draw() {
     ctx.clearRect(0, 0, canvasWidth, canvasHeight);
     drawMap('floor');
-
     for (var i in Player.list) {
         if (!Player.list[i].underWallLayer) {
             Player.list[i].draw("self");
         }
     }
     drawMap('walls');
+    drawMiniMap();
     drawScore();
     drawTime();
     for (var i in Player.list) {
@@ -338,8 +382,10 @@ function draw() {
             Player.list[i].draw("self");
         }
     }
-    for (var i in Player.list)
+    for (var i in Player.list){
+        Player.list[i].drawDot();
         Player.list[i].draw("attributes")
+    }
     for (var i in Objective.list)
         Objective.list[i].drawSelf();
     for (var i in Bullet.list)
@@ -354,6 +400,7 @@ var drawTime = function(){
 		roundPharse = 'Round ends in ' + (60 - time);
 	}else{
 		roundPharse = 'Review Scores! ' + (10 - time);
+		partTime = 0;
 	}
 	
 	if(!displayEnd){
@@ -384,6 +431,11 @@ var drawMap = function(part) {
     ctx.drawImage(map, 0, 0, map.width, map.height, x, y, map.width, map.height);
 }
 
+var drawMiniMap = function(){
+    var map = Img.miniMap;
+    ctxMini.drawImage(map, 0, 0, map.width, map.height, ctxMiniX, ctxMiniY, 100, 100);
+}
+
 var drawScore = function() {
         ctx.font = '30px Arial';
         ctx.fillStyle = 'green';
@@ -410,6 +462,13 @@ document.onkeyup = function(event) {
         socket.emit('keyPress', { inputId: 'left', state: false });
     else if (event.keyCode === 87) // w
         socket.emit('keyPress', { inputId: 'up', state: false });
+    else if (event.keyCode === 77){ // m
+        if(miniMapHolder.style.display != 'none'){
+            miniMapHolder.style.display = 'none';
+        }else{
+            miniMapHolder.style.display = 'block';
+        }
+    }
 }
 
 document.onmousedown = function(event) {

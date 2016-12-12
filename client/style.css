@@ -59,6 +59,14 @@ h1 {
      top: 100px;
 }
 
+#miniMap{
+    width: 100px;
+    height: 100px;
+    position:absolute;
+    left:90%;
+    top:5%;
+}
+
 #shop-div{
     width:500px;
     height:500px;

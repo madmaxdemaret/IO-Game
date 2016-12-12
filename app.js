@@ -114,7 +114,7 @@ var Player = function(param) {
     self.isZombie = roundStarted;
     self.name = NAMES_LIST[counter];
     self.skins = "reg";
-    self.bCounter = 0;
+    self.bCounter = 20;
     self.reloadTime = 5;
     self.timeBetweenBullets = 25/6.25; //.25 seconds calculated by taking 25 fps / 6.25 = 4 so its 1/4 of a second
     self.partTimer = 0;
@@ -132,23 +132,24 @@ var Player = function(param) {
         self.updatePosition();
         
         //shots if mouse if pressed and round has started and reload time //***********remember to add only shoot at the start of the round
-        if (self.pressingAttack && !self.isZombie && roundStarted){
+        if (self.pressingAttack && !self.isZombie ){
             if(self.partTimer == 0){
                 self.partTimer = partTime;
             }
             if(self.hasMag && self.hasAmmo && partTime - self.partTimer >= self.timeBetweenBullets) {
-                self.bCounter++;
+                self.bCounter--;
                 self.partTimer = 0;
                 self.shootBullet(self.mouseAngle);
-                if(self.bCounter > 20){
+                if(self.bCounter == 0){
                     self.hasMag = false;
                     self.timer = time;
-                    self.bCounter = 0;
                 }
-            }else if(self.timer != 0 && time - self.timer >= self.reloadTime){
-                self.hasMag = true;
             }
-        }
+        }else if(self.timer != 0 && self.bCounter == 0 &&time - self.timer >= self.reloadTime ){
+                self.hasMag = true;
+                self.bCounter = 20;
+                self.timer = 0;
+            }
     }
     self.shootBullet = function(angle) {
         Bullet({
@@ -204,6 +205,7 @@ var Player = function(param) {
             isZombie: self.isZombie,
             name: self.name,
             skins: self.skins,
+            bCounter: self.bCounter,
         };
     }
     self.getUpdatePack = function() {
@@ -220,6 +222,7 @@ var Player = function(param) {
             isZombie: self.isZombie,
             skins: self.skins,
             underWallLayer: self.isAboveWall(),
+            bCounter: self.bCounter,
         }
     }
 
@@ -329,18 +332,21 @@ var Bullet = function(param) {
     }
     
     self.checkForCollision = function(x,y){
-        if (x < 0 || x + 32 > mapWidth || y < 0 || y + PimgH > 32)
+        if (x < 0 || x + 10 > mapWidth || y < 0 || y + 10 > mapHeight)
             return true;
 
         //checks within map array at each of the four corners
         //checks right side
-        //if (this.getCollisionWithMap(x - 32, y + 32) || this.getCollisionWithMap(x - 32, y + 32 * 2)) {
-            //return true;
-        //} else if (this.getCollisionWithMap(x + 32, y + 32) || this.getCollisionWithMap(x + 32, y + 32 * 2)) {
-            //return true;
-       // } else if (this.getCollisionWithMap(x, y + 32) || this.getCollisionWithMap(x, y + 32 * 2)) {
-           // return true;
-        //}
+        for (var i in Player.list) {
+            var p = Player.list[i];
+            if (this.getCollisionWithMap(x - 10, y + 10) || this.getCollisionWithMap(x - 10, y + 10 * 2)) {
+                return true;
+            } else if (this.getCollisionWithMap(x + 10, y + 10) || this.getCollisionWithMap(x + 10, y + 10 * 2)) {
+                return true;
+            } else if (this.getCollisionWithMap(x, y + 10) || this.getCollisionWithMap(x, y + 10 * 2)) {
+                return true;
+            }
+        }
     }
     
     self.getInitPack = function() {
